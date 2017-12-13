@@ -2,12 +2,12 @@ from __future__ import division
 from __future__ import print_function
 from abc import ABCMeta, abstractmethod
 
+import argparse
+import importlib
 import logging
 import math
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import sys
-
-import jiayan_2016 as numbers
 
 
 class TaxComputer:
@@ -21,7 +21,8 @@ class TaxComputer:
                  rental_income=0, other_income=0,
                  hsa=0,
                  primary_home_property_tax=0, other_taxes=0,
-                 primary_home_interest=0, gifts=0):
+                 primary_home_interest=0, gifts=0,
+                 *args, **kwargs):
 
         self.year = year
         self.w2 = w2
@@ -327,6 +328,8 @@ class AMTTaxComputer(TaxComputer):
         2016: [
             (0, 0.26),
             (186300, 0.28)],
+        20171: [],
+        20172: [],
     }
 
     QDCG_THRESHOLDS = RegularTaxComputer.QDCG_THRESHOLDS
@@ -338,6 +341,8 @@ class AMTTaxComputer(TaxComputer):
             2014: (117300, 52800),
             2015: (119200, 53600),
             2016: (119700, 53900),
+            20171: (sys.maxint, 0),
+            20172: (sys.maxint, 0),
         }
 
         if self.exemption is not None:
@@ -501,61 +506,74 @@ class StateTaxComputer(TaxComputer):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file',
+                        help='python module with tax info')
+    parser.add_argument('-e', '--extrapolate',
+                        action='store_true',
+                        help='extrapolation analysis')
+    args = parser.parse_args()
+
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.DEBUG if not args.extrapolate else logging.INFO,
         format='%(funcName)s [%(lineno)d]: %(message)s')
+
+    numbers = importlib.import_module(args.file)
 
     params = {
         k: numbers.__dict__[k] for k in dir(numbers) if not k.startswith('__')}
 
+    logging.info("========== Regular Tax ==========")
     regular_tax_computer = RegularTaxComputer(**params)
-    print("Regular Taxable Income: {}".format(
+    logging.info("Taxable Income: {}".format(
         regular_tax_computer.get_taxable_income()))
-    print("Regular Exemption: {}".format(
+    logging.info("Exemption: {}".format(
         regular_tax_computer.get_exemption()))
-    print("Regular Tax: {}\n".format(
+    logging.info("Tax: {}".format(
         regular_tax_computer.get_tax()))
     additional_medicare_tax = \
         regular_tax_computer.get_additional_medicare_tax()
-    print("Additional Medicare Tax: {}".format(
+    logging.info("Additional Medicare Tax: {}".format(
         additional_medicare_tax))
     net_investment_income_tax = \
         regular_tax_computer.get_net_investment_income_tax()
-    print("Net Investment Income Tax: {}".format(
+    logging.info("Net Investment Income Tax: {}".format(
         net_investment_income_tax))
 
+    logging.info("========== AMT Tax ==========")
     amt_tax_computer = AMTTaxComputer(**params)
-    print("AMT Taxable Income: {}".format(
+    logging.info("Taxable Income: {}".format(
         amt_tax_computer.get_taxable_income()))
-    print("AMT Exemption: {}".format(
+    logging.info("Exemption: {}".format(
         amt_tax_computer.get_exemption()))
-    print("AMT Tax: {}\n".format(
+    logging.info("Tax: {}".format(
         amt_tax_computer.get_tax()))
 
+    logging.info("========== State Tax ==========")
     state_tax_computer = StateTaxComputer(**params)
-    print("State Taxable Income: {}".format(
+    logging.info("Taxable Income: {}".format(
         state_tax_computer.get_taxable_income()))
-    print("State Exemption: {}".format(
+    logging.info("Exemption: {}".format(
         state_tax_computer.get_exemption()))
-    print("State Tax: {}\n".format(
+    logging.info("Tax: {}\n".format(
         state_tax_computer.get_tax()))
 
-    # Drawing trend
-    """
-    w20 = params['w2']
-    w2s = range(100000, 600000, 10000)
-    regular_taxes = [RegularTaxComputer(**dict(params, **{'w2': w2})).get_tax()
-                     for w2 in w2s]
-    amt_taxes = [AMTTaxComputer(**dict(params, **{'w2': w2})).get_tax()
-                 for w2 in w2s]
+    if args.extrapolate:
+        w20 = params['w2']
+        w2s = range(100000, 600000, 10000)
+        regular_taxes = [
+            RegularTaxComputer(**dict(params, **{'w2': w2})).get_tax()
+            for w2 in w2s]
+        amt_taxes = [
+            AMTTaxComputer(**dict(params, **{'w2': w2})).get_tax()
+            for w2 in w2s]
 
-    fig, ax = plt.subplots()
-    ax.plot(w2s, regular_taxes, 'bo-', label='Regular Tax')
-    ax.plot(w2s, amt_taxes, 'rs--', label='AMT Tax')
-    actual_tax = max(
-        regular_tax_computer.get_tax(), amt_tax_computer.get_tax())
-    ax.plot(w20, actual_tax, 'y*', markersize=20, label='Actual Tax')
-    legend = ax.legend(loc='upper center', shadow=True)
-    plt.grid(True)
-    plt.show()
-    """
+        fig, ax = plt.subplots()
+        ax.plot(w2s, regular_taxes, 'bo-', label='Regular Tax')
+        ax.plot(w2s, amt_taxes, 'rs--', label='AMT Tax')
+        actual_tax = max(
+            regular_tax_computer.get_tax(), amt_tax_computer.get_tax())
+        ax.plot(w20, actual_tax, 'y*', markersize=20, label='Actual Tax')
+        legend = ax.legend(loc='upper center', shadow=True)
+        plt.grid(True)
+        plt.show()
