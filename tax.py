@@ -163,19 +163,14 @@ class RegularTaxComputer(TaxComputer):
             (190150, 0.33),
             (413350, 0.35),
             (415050, 0.396)],
-        20171: [
+        2017: [
             (0, 0.1),
             (9525, 0.12),
-            (38700, 0.225),
-            (60000, 0.25),
-            (170000, 0.325),
+            (38700, 0.22),
+            (82500, 0.24),
+            (157500, 0.32),
             (200000, 0.35),
-            (500000, 0.385)],
-        20172: [
-            (0, 0.12),
-            (45000, 0.25),
-            (200000, 0.35),
-            (500000, 0.396)],
+            (500000, 0.37)],
     }
 
     QDCG_THRESHOLDS = {
@@ -198,11 +193,7 @@ class RegularTaxComputer(TaxComputer):
             (37650, 0),
             (415050, 0.15),
             (sys.maxint, 0.2)],
-        20171: [
-            (37650, 0),
-            (415050, 0.15),
-            (sys.maxint, 0.2)],
-        20172: [
+        2017: [  # TODO
             (37650, 0),
             (415050, 0.15),
             (sys.maxint, 0.2)],
@@ -215,8 +206,7 @@ class RegularTaxComputer(TaxComputer):
             2014: (254200, 3950),
             2015: (258250, 4000),
             2016: (259400, 4050),
-            20171: (sys.maxint, 0),
-            20172: (sys.maxint, 0),
+            2017: (sys.maxint, 0),
         }
 
         if self.exemption is not None:
@@ -236,8 +226,7 @@ class RegularTaxComputer(TaxComputer):
             2014: 254200,
             2015: 258250,
             2016: 259400,
-            20171: sys.maxint,
-            20172: sys.maxint,
+            2017: sys.maxint,
         }
         standard_deduction = {
             2012: 5950,
@@ -245,20 +234,19 @@ class RegularTaxComputer(TaxComputer):
             2014: 6200,
             2015: 6300,
             2016: 6300,
-            20171: 12000,
-            20172: 12000,
+            2017: 12000,
         }
 
         if self.taxable_income is not None:
             return self.taxable_income
 
+        state_local_taxes = (
+            self.state_income_tax +
+            self.primary_home_property_tax)
         tentative_deduction = (
-            (0
-                if self.year in (20171, 20172)
-                else self.state_income_tax) +
-            (min(10000, self.primary_home_property_tax)
-                if self.year in (20171, 20172)
-                else self.primary_home_property_tax) +
+            (min(10000, state_local_taxes)
+                if self.year == 2017
+                else state_local_taxes) +
             self.other_taxes +
             self.primary_home_interest +
             self.gifts)
@@ -328,8 +316,9 @@ class AMTTaxComputer(TaxComputer):
         2016: [
             (0, 0.26),
             (186300, 0.28)],
-        20171: [],
-        20172: [],
+        2017: [  # TODO
+            (0, 0.26),
+            (186300, 0.28)],
     }
 
     QDCG_THRESHOLDS = RegularTaxComputer.QDCG_THRESHOLDS
@@ -341,8 +330,7 @@ class AMTTaxComputer(TaxComputer):
             2014: (117300, 52800),
             2015: (119200, 53600),
             2016: (119700, 53900),
-            20171: (sys.maxint, 0),
-            20172: (sys.maxint, 0),
+            2017: (119700, 70300),  # TODO
         }
 
         if self.exemption is not None:
@@ -432,6 +420,16 @@ class StateTaxComputer(TaxComputer):
             (268750, 0.103),
             (322499, 0.113),
             (537498, 0.123)],
+        2017: [  # TODO
+            (0, 0.01),
+            (8015, 0.02),
+            (19001, 0.04),
+            (29989, 0.06),
+            (41629, 0.08),
+            (52612, 0.093),
+            (268750, 0.103),
+            (322499, 0.113),
+            (537498, 0.123)],
     }
 
     def get_exemption(self):
@@ -441,6 +439,7 @@ class StateTaxComputer(TaxComputer):
             2014: (176413, 108),
             2015: (178706, 109),
             2016: (182459, 111),
+            2017: (182459, 111),  # TODO
         }
 
         if self.exemption is not None:
@@ -459,6 +458,7 @@ class StateTaxComputer(TaxComputer):
             2014: 176413,
             2015: 178706,
             2016: 182459,
+            2017: 182459,  # TODO
         }
         standard_deduction = {
             2012: 3841,
@@ -466,6 +466,7 @@ class StateTaxComputer(TaxComputer):
             2014: 3992,
             2015: 4044,
             2016: 4129,
+            2017: 4129,  # TODO
         }
 
         if self.taxable_income is not None:
