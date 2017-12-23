@@ -81,7 +81,7 @@ class TaxComputer:
                 overamount = taxable_income - boundary
                 tax += overamount * taxrate
                 logging.debug(
-                    "applying tax rate {} to {}>{}: {} cumulative".format(
+                    "applying tax rate {} to {}-{}: {} cumulative".format(
                         taxrate, taxable_income, boundary, tax))
                 taxable_income -= overamount
         return tax
@@ -95,7 +95,7 @@ class TaxComputer:
             qualified_qdcg = max(0, remaining_qdcg - limit)
             tax += qualified_qdcg * threshold[1]
             logging.debug(
-                "applying tax rate {} to {}>{}: {} cumulative".format(
+                "applying tax rate {} to {}-{}: {} cumulative".format(
                     threshold[1], remaining_qdcg, limit, tax))
             remaining_qdcg -= qualified_qdcg
             if remaining_qdcg == 0:
@@ -165,6 +165,14 @@ class RegularTaxComputer(TaxComputer):
             (415050, 0.396)],
         2017: [
             (0, 0.1),
+            (9325, 0.15),
+            (37950, 0.25),
+            (91900, 0.28),
+            (191650, 0.33),
+            (416700, 0.35),
+            (418400, 0.396)],
+        2018: [
+            (0, 0.1),
             (9525, 0.12),
             (38700, 0.22),
             (82500, 0.24),
@@ -193,9 +201,9 @@ class RegularTaxComputer(TaxComputer):
             (37650, 0),
             (415050, 0.15),
             (sys.maxint, 0.2)],
-        2017: [  # TODO
-            (37650, 0),
-            (415050, 0.15),
+        2018: [
+            (38600, 0),
+            (425800, 0.15),
             (sys.maxint, 0.2)],
     }
 
@@ -206,7 +214,7 @@ class RegularTaxComputer(TaxComputer):
             2014: (254200, 3950),
             2015: (258250, 4000),
             2016: (259400, 4050),
-            2017: (sys.maxint, 0),
+            2018: (sys.maxint, 0),
         }
 
         if self.exemption is not None:
@@ -226,7 +234,7 @@ class RegularTaxComputer(TaxComputer):
             2014: 254200,
             2015: 258250,
             2016: 259400,
-            2017: sys.maxint,
+            2018: sys.maxint,
         }
         standard_deduction = {
             2012: 5950,
@@ -234,7 +242,7 @@ class RegularTaxComputer(TaxComputer):
             2014: 6200,
             2015: 6300,
             2016: 6300,
-            2017: 12000,
+            2018: 12000,
         }
 
         if self.taxable_income is not None:
@@ -245,7 +253,7 @@ class RegularTaxComputer(TaxComputer):
             self.primary_home_property_tax)
         tentative_deduction = (
             (min(10000, state_local_taxes)
-                if self.year == 2017
+                if self.year >= 2018
                 else state_local_taxes) +
             self.other_taxes +
             self.primary_home_interest +
@@ -281,7 +289,7 @@ class RegularTaxComputer(TaxComputer):
         taxrate = 0.009
         overamount = max(0, self.w2_for_medicare - threshold_on_w2)
         tax = taxrate * overamount
-        logging.debug("applying tax rate {} to {}>{}: {}".format(
+        logging.debug("applying tax rate {} to {}-{}: {}".format(
             taxrate, self.w2_for_medicare, threshold_on_w2, tax))
         return tax
 
@@ -293,7 +301,7 @@ class RegularTaxComputer(TaxComputer):
         logging.debug("taxable investment: {}".format(taxable_investment))
         overamount = max(0, self.agi - threshold_on_agi)
         tax = taxrate * min(taxable_investment, overamount)
-        logging.debug("applying tax rate {} to min({}, {}>{}): {}".format(
+        logging.debug("applying tax rate {} to min({}, {}-{}): {}".format(
             taxrate, taxable_investment, self.agi, threshold_on_agi, tax))
         return tax
 
@@ -316,7 +324,7 @@ class AMTTaxComputer(TaxComputer):
         2016: [
             (0, 0.26),
             (186300, 0.28)],
-        2017: [  # TODO
+        2018: [  # TODO
             (0, 0.26),
             (186300, 0.28)],
     }
@@ -330,7 +338,7 @@ class AMTTaxComputer(TaxComputer):
             2014: (117300, 52800),
             2015: (119200, 53600),
             2016: (119700, 53900),
-            2017: (119700, 70300),  # TODO
+            2018: (119700, 70300),  # TODO
         }
 
         if self.exemption is not None:
@@ -420,7 +428,7 @@ class StateTaxComputer(TaxComputer):
             (268750, 0.103),
             (322499, 0.113),
             (537498, 0.123)],
-        2017: [  # TODO
+        2018: [  # TODO
             (0, 0.01),
             (8015, 0.02),
             (19001, 0.04),
@@ -439,7 +447,7 @@ class StateTaxComputer(TaxComputer):
             2014: (176413, 108),
             2015: (178706, 109),
             2016: (182459, 111),
-            2017: (182459, 111),  # TODO
+            2018: (182459, 111),  # TODO
         }
 
         if self.exemption is not None:
@@ -458,7 +466,7 @@ class StateTaxComputer(TaxComputer):
             2014: 176413,
             2015: 178706,
             2016: 182459,
-            2017: 182459,  # TODO
+            2018: 182459,  # TODO
         }
         standard_deduction = {
             2012: 3841,
@@ -466,7 +474,7 @@ class StateTaxComputer(TaxComputer):
             2014: 3992,
             2015: 4044,
             2016: 4129,
-            2017: 4129,  # TODO
+            2018: 4129,  # TODO
         }
 
         if self.taxable_income is not None:
@@ -560,21 +568,28 @@ if __name__ == '__main__':
         state_tax_computer.get_tax()))
 
     if args.extrapolate:
-        w20 = params['w2']
-        w2s = range(100000, 600000, 10000)
-        regular_taxes = [
-            RegularTaxComputer(**dict(params, **{'w2': w2})).get_tax()
-            for w2 in w2s]
-        amt_taxes = [
-            AMTTaxComputer(**dict(params, **{'w2': w2})).get_tax()
-            for w2 in w2s]
+        deltas = range(0, 10001, 1000)
+        item = 'capital_gain'
+        regular_taxes = [RegularTaxComputer(
+            **dict(params, **{
+                item: params[item] + delta,
+                'long_term_capital_gain':
+                    params['long_term_capital_gain'] + delta,
+            })).get_tax() for delta in deltas]
+        amt_taxes = [AMTTaxComputer(
+            **dict(params, **{
+                item: params[item] + delta,
+                'long_term_capital_gain':
+                    params['long_term_capital_gain'] + delta,
+            })).get_tax() for delta in deltas]
 
         fig, ax = plt.subplots()
-        ax.plot(w2s, regular_taxes, 'bo-', label='Regular Tax')
-        ax.plot(w2s, amt_taxes, 'rs--', label='AMT Tax')
+        ax.plot(deltas, regular_taxes, 'bo-', label='Regular Tax')
+        ax.plot(deltas, amt_taxes, 'rs--', label='AMT Tax')
         actual_tax = max(
             regular_tax_computer.get_tax(), amt_tax_computer.get_tax())
-        ax.plot(w20, actual_tax, 'y*', markersize=20, label='Actual Tax')
+        ax.plot(0, actual_tax,
+                'y*', markersize=20, label='Actual Tax')
         legend = ax.legend(loc='upper center', shadow=True)
         plt.grid(True)
         plt.show()

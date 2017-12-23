@@ -43,7 +43,7 @@ class TestRedshiftInterface(unittest.TestCase):
     def test_2015(self):
         self._test('jiayan_2015')
 
-    def test_2016(self):
+    def _test_2016(self):
         self._test('jiayan_2016')
 
 
