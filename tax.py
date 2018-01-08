@@ -201,6 +201,10 @@ class RegularTaxComputer(TaxComputer):
             (37650, 0),
             (415050, 0.15),
             (sys.maxint, 0.2)],
+        2017: [
+            (37950, 0),
+            (418400, 0.15),
+            (sys.maxint, 0.2)],
         2018: [
             (38600, 0),
             (425800, 0.15),
@@ -214,6 +218,7 @@ class RegularTaxComputer(TaxComputer):
             2014: (254200, 3950),
             2015: (258250, 4000),
             2016: (259400, 4050),
+            2017: (261500, 4050),
             2018: (sys.maxint, 0),
         }
 
@@ -234,6 +239,7 @@ class RegularTaxComputer(TaxComputer):
             2014: 254200,
             2015: 258250,
             2016: 259400,
+            2017: 261500,
             2018: sys.maxint,
         }
         standard_deduction = {
@@ -242,6 +248,7 @@ class RegularTaxComputer(TaxComputer):
             2014: 6200,
             2015: 6300,
             2016: 6300,
+            2017: 6350,
             2018: 12000,
         }
 
@@ -324,6 +331,9 @@ class AMTTaxComputer(TaxComputer):
         2016: [
             (0, 0.26),
             (186300, 0.28)],
+        2017: [
+            (0, 0.26),
+            (187800, 0.28)],
         2018: [  # TODO
             (0, 0.26),
             (186300, 0.28)],
@@ -338,6 +348,7 @@ class AMTTaxComputer(TaxComputer):
             2014: (117300, 52800),
             2015: (119200, 53600),
             2016: (119700, 53900),
+            2017: (120700, 54300),
             2018: (119700, 70300),  # TODO
         }
 
@@ -428,6 +439,16 @@ class StateTaxComputer(TaxComputer):
             (268750, 0.103),
             (322499, 0.113),
             (537498, 0.123)],
+        2017: [
+            (0, 0.01),
+            (8015, 0.02),
+            (19001, 0.04),
+            (29989, 0.06),
+            (41629, 0.08),
+            (52612, 0.093),
+            (268750, 0.103),
+            (322499, 0.113),
+            (537498, 0.123)],
         2018: [  # TODO
             (0, 0.01),
             (8015, 0.02),
@@ -447,6 +468,7 @@ class StateTaxComputer(TaxComputer):
             2014: (176413, 108),
             2015: (178706, 109),
             2016: (182459, 111),
+            2017: (182459, 111),
             2018: (182459, 111),  # TODO
         }
 
@@ -466,6 +488,7 @@ class StateTaxComputer(TaxComputer):
             2014: 176413,
             2015: 178706,
             2016: 182459,
+            2017: 182459,
             2018: 182459,  # TODO
         }
         standard_deduction = {
@@ -474,6 +497,7 @@ class StateTaxComputer(TaxComputer):
             2014: 3992,
             2015: 4044,
             2016: 4129,
+            2017: 4129,
             2018: 4129,  # TODO
         }
 
@@ -568,7 +592,7 @@ if __name__ == '__main__':
         state_tax_computer.get_tax()))
 
     if args.extrapolate:
-        deltas = range(0, 10001, 1000)
+        deltas = range(0, 200001, 10000)
         item = 'capital_gain'
         regular_taxes = [RegularTaxComputer(
             **dict(params, **{
