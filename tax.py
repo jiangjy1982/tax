@@ -48,14 +48,14 @@ class TaxComputer:
             self.dividends +
             self.capital_gain +
             self.rental_income)
-        logging.debug("investment_income = {}".format(self.investment_income))
+        logging.debug("investment_income = {:.0f}".format(self.investment_income))
 
         self.agi = (
             self.w2 +
             self.investment_income +
             self.state_refund +
             self.other_income)
-        logging.debug("agi = {}".format(self.agi))
+        logging.debug("agi = {:.0f}".format(self.agi))
 
         self.exemption = None
         self.taxable_income = None
@@ -81,7 +81,7 @@ class TaxComputer:
                 overamount = taxable_income - boundary
                 tax += overamount * taxrate
                 logging.debug(
-                    "applying tax rate {} to {}-{}: {} cumulative".format(
+                        "applying tax rate {} to {}-{}: {:.0f} cumulative".format(
                         taxrate, taxable_income, boundary, tax))
                 taxable_income -= overamount
         return tax
@@ -95,7 +95,7 @@ class TaxComputer:
             qualified_qdcg = max(0, remaining_qdcg - limit)
             tax += qualified_qdcg * threshold[1]
             logging.debug(
-                "applying tax rate {} to {}-{}: {} cumulative".format(
+                    "applying tax rate {} to {}-{}: {:.0f} cumulative".format(
                     threshold[1], remaining_qdcg, limit, tax))
             remaining_qdcg -= qualified_qdcg
             if remaining_qdcg == 0:
@@ -105,18 +105,18 @@ class TaxComputer:
     def _compute_tax_with_qdcg(self, taxable_income):
         brackets = self.TAX_BRACKETS[self.year]
         tax = self._apply_tax_brackets(brackets, taxable_income)
-        logging.debug("tax: {}".format(tax))
+        logging.debug("tax: {:.0f}".format(tax))
 
         qdcg_thresholds = self.QDCG_THRESHOLDS[self.year]
         qdcg = self.qualified_dividends
         if self.capital_gain > 0 and self.long_term_capital_gain > 0:
-            qdcg += self.long_term_capital_gain
+            qdcg += min(self.capital_gain, self.long_term_capital_gain)
         if qdcg > 0:
             tax_qdcg = (
                 self._apply_tax_brackets(brackets,
                                          max(0, taxable_income - qdcg)) +
                 self._get_qdcg_tax(qdcg_thresholds, taxable_income, qdcg))
-            logging.debug("tax_qdcg: {}".format(tax_qdcg))
+            logging.debug("tax_qdcg: {:.0f}".format(tax_qdcg))
             tax = min(tax, tax_qdcg)
         return tax
 
@@ -273,9 +273,9 @@ class RegularTaxComputer(TaxComputer):
             ),
             tentative_deduction * 0.8,
         )
-        logging.debug("limit = {}".format(limit))
+        logging.debug("limit = {:.0f}".format(limit))
         itemized_deduction = tentative_deduction - limit
-        logging.debug("itemized_deduction = {}".format(itemized_deduction))
+        logging.debug("itemized_deduction = {:.0f}".format(itemized_deduction))
         logging.debug("standard_deduction = {}".format(
             standard_deduction[self.year]))
 
@@ -296,7 +296,7 @@ class RegularTaxComputer(TaxComputer):
         taxrate = 0.009
         overamount = max(0, self.w2_for_medicare - threshold_on_w2)
         tax = taxrate * overamount
-        logging.debug("applying tax rate {} to {}-{}: {}".format(
+        logging.debug("applying tax rate {} to {}-{}: {:.0f}".format(
             taxrate, self.w2_for_medicare, threshold_on_w2, tax))
         return tax
 
@@ -305,10 +305,10 @@ class RegularTaxComputer(TaxComputer):
         taxrate = 0.038
         taxable_investment = (
             self.investment_income * (1 - self.state_income_tax / self.agi))
-        logging.debug("taxable investment: {}".format(taxable_investment))
+        logging.debug("taxable investment: {:.0f}".format(taxable_investment))
         overamount = max(0, self.agi - threshold_on_agi)
         tax = taxrate * min(taxable_investment, overamount)
-        logging.debug("applying tax rate {} to min({}, {}-{}): {}".format(
+        logging.debug("applying tax rate {} to min({:.0f}, {}-{}): {:.0f}".format(
             taxrate, taxable_investment, self.agi, threshold_on_agi, tax))
         return tax
 
@@ -519,9 +519,9 @@ class StateTaxComputer(TaxComputer):
             ),
             tentative_deduction * 0.8,
         )
-        logging.debug("limit = {}".format(limit))
+        logging.debug("limit = {:.0f}".format(limit))
         itemized_deduction = tentative_deduction - limit
-        logging.debug("itemized_deduction = {}".format(itemized_deduction))
+        logging.debug("itemized_deduction = {:.0f}".format(itemized_deduction))
         logging.debug("standard_deduction = {}".format(
             standard_deduction[self.year]))
         self.taxable_income = max(
@@ -558,19 +558,19 @@ if __name__ == '__main__':
 
     logging.info("========== Regular Tax ==========")
     regular_tax_computer = RegularTaxComputer(**params)
-    logging.info("Taxable Income: {}".format(
+    logging.info("Taxable Income: {:.0f}".format(
         regular_tax_computer.get_taxable_income()))
     logging.info("Exemption: {}".format(
         regular_tax_computer.get_exemption()))
-    logging.info("Tax: {}".format(
+    logging.info("Tax: {:.0f}".format(
         regular_tax_computer.get_tax()))
     additional_medicare_tax = \
         regular_tax_computer.get_additional_medicare_tax()
-    logging.info("Additional Medicare Tax: {}".format(
+    logging.info("Additional Medicare Tax: {:.0f}".format(
         additional_medicare_tax))
     net_investment_income_tax = \
         regular_tax_computer.get_net_investment_income_tax()
-    logging.info("Net Investment Income Tax: {}".format(
+    logging.info("Net Investment Income Tax: {:.0f}".format(
         net_investment_income_tax))
 
     logging.info("========== AMT Tax ==========")
@@ -579,16 +579,16 @@ if __name__ == '__main__':
         amt_tax_computer.get_taxable_income()))
     logging.info("Exemption: {}".format(
         amt_tax_computer.get_exemption()))
-    logging.info("Tax: {}".format(
+    logging.info("Tax: {:.0f}".format(
         amt_tax_computer.get_tax()))
 
     logging.info("========== State Tax ==========")
     state_tax_computer = StateTaxComputer(**params)
-    logging.info("Taxable Income: {}".format(
+    logging.info("Taxable Income: {:.0f}".format(
         state_tax_computer.get_taxable_income()))
     logging.info("Exemption: {}".format(
         state_tax_computer.get_exemption()))
-    logging.info("Tax: {}\n".format(
+    logging.info("Tax: {:.0f}\n".format(
         state_tax_computer.get_tax()))
 
     if args.extrapolate:
