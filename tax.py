@@ -21,7 +21,7 @@ class TaxComputer:
                  rental_income=0, other_income=0,
                  hsa=0,
                  primary_home_property_tax=0, other_taxes=0,
-                 primary_home_interest=0, gifts=0,
+                 primary_home_interest=0, gifts=0, credits = 0,
                  *args, **kwargs):
 
         self.year = year
@@ -42,6 +42,7 @@ class TaxComputer:
         self.other_taxes = other_taxes
         self.primary_home_interest = primary_home_interest
         self.gifts = gifts
+        self.credits = credits
 
         self.investment_income = (
             self.interest +
@@ -383,6 +384,7 @@ class AMTTaxComputer(TaxComputer):
         taxable_income = self.get_taxable_income()
         exemption = self.get_exemption()
         tax = self._compute_tax_with_qdcg(max(0, taxable_income - exemption))
+        tax -= self.credits
         return tax
 
 
@@ -556,40 +558,46 @@ if __name__ == '__main__':
     params = {
         k: numbers.__dict__[k] for k in dir(numbers) if not k.startswith('__')}
 
+    GREEN = '\033[92m'
+    BLUE = '\033[94m'
+    RED = '\033[91m'
+    CYAN = '\033[36m'
+    ENDC = '\033[0m'
+
     logging.info("========== Regular Tax ==========")
     regular_tax_computer = RegularTaxComputer(**params)
     logging.info("Taxable Income: {:.0f}".format(
         regular_tax_computer.get_taxable_income()))
-    logging.info("Exemption: {}".format(
+    logging.info("Exemption: {:.0f}".format(
         regular_tax_computer.get_exemption()))
-    logging.info("Tax: {:.0f}".format(
-        regular_tax_computer.get_tax()))
+    logging.info(GREEN + "Regular Tax: {:.0f}".format(
+        regular_tax_computer.get_tax()) + ENDC)
     additional_medicare_tax = \
         regular_tax_computer.get_additional_medicare_tax()
-    logging.info("Additional Medicare Tax: {:.0f}".format(
-        additional_medicare_tax))
+    logging.info(BLUE + "Additional Medicare Tax: {:.0f}".format(
+        additional_medicare_tax) + ENDC)
     net_investment_income_tax = \
         regular_tax_computer.get_net_investment_income_tax()
-    logging.info("Net Investment Income Tax: {:.0f}".format(
-        net_investment_income_tax))
+    logging.info(BLUE + "Net Investment Income Tax: {:.0f}".format(
+        net_investment_income_tax) + ENDC)
 
     logging.info("========== AMT Tax ==========")
     amt_tax_computer = AMTTaxComputer(**params)
-    logging.info("Taxable Income: {}".format(
+    logging.info("Taxable Income: {:.0f}".format(
         amt_tax_computer.get_taxable_income()))
-    logging.info("Exemption: {}".format(
+    logging.info("Exemption: {:.0f}".format(
         amt_tax_computer.get_exemption()))
-    logging.info("Tax: {:.0f}".format(
-        amt_tax_computer.get_tax()))
+    logging.info(RED + "AMT Tax: {:.0f}".format(
+        amt_tax_computer.get_tax()) + ENDC)
 
     logging.info("========== State Tax ==========")
     state_tax_computer = StateTaxComputer(**params)
     logging.info("Taxable Income: {:.0f}".format(
         state_tax_computer.get_taxable_income()))
-    logging.info("Exemption: {}".format(
+    logging.info("Exemption: {:.0f}".format(
         state_tax_computer.get_exemption()))
-    logging.info("Tax: {:.0f}\n".format(
-        state_tax_computer.get_tax()))
+    logging.info(CYAN + "State Tax: {:.0f}\n".format(
+        state_tax_computer.get_tax()) + ENDC)
 
     if args.extrapolate:
         deltas = range(0, 200001, 10000)
