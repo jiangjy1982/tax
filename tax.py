@@ -18,8 +18,8 @@ class TaxComputer:
                  dividends=0, qualified_dividends=0,
                  state_refund=0,
                  capital_gain=0, long_term_capital_gain=0,
-                 rental_income=0, other_income=0,
-                 hsa=0,
+                 rental_income=0, investment_income_modification=0,
+				 other_income=0, hsa=0,
                  primary_home_property_tax=0, other_taxes=0,
                  primary_home_interest=0, gifts=0, credits = 0,
                  *args, **kwargs):
@@ -36,6 +36,7 @@ class TaxComputer:
         self.capital_gain = capital_gain
         self.long_term_capital_gain = long_term_capital_gain
         self.rental_income = rental_income
+        self.investment_income_modification = investment_income_modification
         self.other_income = other_income
         self.hsa = hsa
         self.primary_home_property_tax = primary_home_property_tax
@@ -304,8 +305,11 @@ class RegularTaxComputer(TaxComputer):
     def get_net_investment_income_tax(self):
         threshold_on_agi = 200000
         taxrate = 0.038
+        investment_income = (
+            self.investment_income +
+            self.investment_income_modification)
         taxable_investment = (
-            self.investment_income * (1 - self.state_income_tax / self.agi))
+            investment_income * (1 - self.state_income_tax / self.agi))
         logging.debug("taxable investment: {:.0f}".format(taxable_investment))
         overamount = max(0, self.agi - threshold_on_agi)
         tax = taxrate * min(taxable_investment, overamount)
@@ -443,14 +447,14 @@ class StateTaxComputer(TaxComputer):
             (537498, 0.123)],
         2017: [
             (0, 0.01),
-            (8015, 0.02),
-            (19001, 0.04),
-            (29989, 0.06),
-            (41629, 0.08),
-            (52612, 0.093),
-            (268750, 0.103),
-            (322499, 0.113),
-            (537498, 0.123)],
+            (8223, 0.02),
+            (19495, 0.04),
+            (30769, 0.06),
+            (42711, 0.08),
+            (53980, 0.093),
+            (275738, 0.103),
+            (330884, 0.113),
+            (551473, 0.123)],
         2018: [  # TODO
             (0, 0.01),
             (8015, 0.02),
@@ -470,7 +474,7 @@ class StateTaxComputer(TaxComputer):
             2014: (176413, 108),
             2015: (178706, 109),
             2016: (182459, 111),
-            2017: (182459, 111),
+            2017: (187203, 114),
             2018: (182459, 111),  # TODO
         }
 
@@ -490,7 +494,7 @@ class StateTaxComputer(TaxComputer):
             2014: 176413,
             2015: 178706,
             2016: 182459,
-            2017: 182459,
+            2017: 187203,
             2018: 182459,  # TODO
         }
         standard_deduction = {
@@ -499,7 +503,7 @@ class StateTaxComputer(TaxComputer):
             2014: 3992,
             2015: 4044,
             2016: 4129,
-            2017: 4129,
+            2017: 4236,
             2018: 4129,  # TODO
         }
 
