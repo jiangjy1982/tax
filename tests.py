@@ -46,6 +46,9 @@ class TestRedshiftInterface(unittest.TestCase):
     def test_2016(self):
         self._test('jiayan_2016')
 
+    def test_2017(self):
+        self._test('jiayan_2017')
+
 
 if __name__ == '__main__':
         unittest.main()

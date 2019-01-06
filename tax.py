@@ -13,12 +13,14 @@ import sys
 class TaxComputer:
     __metaclass__ = ABCMeta
 
-    def __init__(self, year, w2, w2_for_medicare, state_income_tax,
+    def __init__(self, year, w2, w2_for_medicare,
+                 state_income_tax, casdi=0,
+                 state_tax_previous_year=0, car_registration=0,
                  interest=0, other_interest=0,
-                 dividends=0, qualified_dividends=0,
-                 state_refund=0,
+                 dividends=0, qualified_dividends=0, unrecaptured_1250_gain=0,
+                 roth_conversion_gain=0, state_refund=0,
                  capital_gain=0, long_term_capital_gain=0,
-                 rental_income=0, investment_income_modification=0,
+                 rental_income=0, qbi = 0, investment_income_modification=0,
 				 other_income=0, hsa=0,
                  primary_home_property_tax=0, other_taxes=0,
                  primary_home_interest=0, gifts=0, credits = 0,
@@ -28,14 +30,20 @@ class TaxComputer:
         self.w2 = w2
         self.w2_for_medicare = w2_for_medicare
         self.state_income_tax = state_income_tax
+        self.casdi = casdi
+        self.state_tax_previous_year = state_tax_previous_year
+        self.car_registration = car_registration
         self.interest = interest
         self.other_interest = other_interest
         self.dividends = dividends
         self.qualified_dividends = qualified_dividends
+        self.unrecaptured_1250_gain = unrecaptured_1250_gain
+        self.roth_conversion_gain = roth_conversion_gain
         self.state_refund = state_refund
         self.capital_gain = capital_gain
         self.long_term_capital_gain = long_term_capital_gain
         self.rental_income = rental_income
+        self.qbi = qbi
         self.investment_income_modification = investment_income_modification
         self.other_income = other_income
         self.hsa = hsa
@@ -44,6 +52,12 @@ class TaxComputer:
         self.primary_home_interest = primary_home_interest
         self.gifts = gifts
         self.credits = credits
+
+        self.state_local_income_taxes = (
+            self.state_income_tax +
+            self.casdi +
+            self.state_tax_previous_year)
+        logging.debug("state_local_income_taxes = {}".format(self.state_local_income_taxes))
 
         self.investment_income = (
             self.interest +
@@ -55,6 +69,7 @@ class TaxComputer:
         self.agi = (
             self.w2 +
             self.investment_income +
+            self.roth_conversion_gain +
             self.state_refund +
             self.other_income)
         logging.debug("agi = {:.0f}".format(self.agi))
@@ -113,13 +128,22 @@ class TaxComputer:
         qdcg = self.qualified_dividends
         if self.capital_gain > 0 and self.long_term_capital_gain > 0:
             qdcg += min(self.capital_gain, self.long_term_capital_gain)
+        qdcg -= self.unrecaptured_1250_gain
+        taxable_income -= self.unrecaptured_1250_gain
         if qdcg > 0:
             tax_qdcg = (
                 self._apply_tax_brackets(brackets,
                                          max(0, taxable_income - qdcg)) +
                 self._get_qdcg_tax(qdcg_thresholds, taxable_income, qdcg))
+            unrecaptured_1250_tax = self.unrecaptured_1250_gain * 0.25
+            logging.debug("applying tax rate {} to {}: {:.0f}".format(
+                self.UNRECAPTURED_1250_TAX_RATE,
+                self.unrecaptured_1250_gain,
+                unrecaptured_1250_tax))
+            tax_qdcg += unrecaptured_1250_tax
             logging.debug("tax_qdcg: {:.0f}".format(tax_qdcg))
             tax = min(tax, tax_qdcg)
+
         return tax
 
 
@@ -186,42 +210,44 @@ class RegularTaxComputer(TaxComputer):
     QDCG_THRESHOLDS = {
         2012: [
             (35350, 0),
-            (sys.maxint, 0.15)],
+            (sys.maxsize, 0.15)],
         2013: [
             (36250, 0),
             (400000, 0.15),
-            (sys.maxint, 0.2)],
+            (sys.maxsize, 0.2)],
         2014: [
             (36900, 0),
             (406750, 0.15),
-            (sys.maxint, 0.2)],
+            (sys.maxsize, 0.2)],
         2015: [
             (37450, 0),
             (413200, 0.15),
-            (sys.maxint, 0.2)],
+            (sys.maxsize, 0.2)],
         2016: [
             (37650, 0),
             (415050, 0.15),
-            (sys.maxint, 0.2)],
+            (sys.maxsize, 0.2)],
         2017: [
             (37950, 0),
             (418400, 0.15),
-            (sys.maxint, 0.2)],
+            (sys.maxsize, 0.2)],
         2018: [
             (38600, 0),
             (425800, 0.15),
-            (sys.maxint, 0.2)],
+            (sys.maxsize, 0.2)],
     }
+
+    UNRECAPTURED_1250_TAX_RATE = 0.25
 
     def get_exemption(self):
         exemption_threshold = {
-            2012: (sys.maxint, 3800),
+            2012: (sys.maxsize, 3800),
             2013: (250000, 3900),
             2014: (254200, 3950),
             2015: (258250, 4000),
             2016: (259400, 4050),
             2017: (261500, 4050),
-            2018: (sys.maxint, 0),
+            2018: (sys.maxsize, 0),
         }
 
         if self.exemption is not None:
@@ -236,13 +262,13 @@ class RegularTaxComputer(TaxComputer):
 
     def get_taxable_income(self):
         itemized_deduction_limit_threshold_on_agi = {
-            2012: sys.maxint,
+            2012: sys.maxsize,
             2013: 250000,
             2014: 254200,
             2015: 258250,
             2016: 259400,
             2017: 261500,
-            2018: sys.maxint,
+            2018: sys.maxsize,
         }
         standard_deduction = {
             2012: 5950,
@@ -258,12 +284,15 @@ class RegularTaxComputer(TaxComputer):
             return self.taxable_income
 
         state_local_taxes = (
-            self.state_income_tax +
-            self.primary_home_property_tax)
+            self.state_local_income_taxes +
+            self.primary_home_property_tax +
+            self.car_registration)
+        if self.year >= 2018 and state_local_taxes > 10000:
+            logging.debug("state_local_taxes = {}, but limited to 10000".format(
+                state_local_taxes))
+            state_local_taxes = 10000
         tentative_deduction = (
-            (min(10000, state_local_taxes)
-                if self.year >= 2018
-                else state_local_taxes) +
+            state_local_taxes +
             self.other_taxes +
             self.primary_home_interest +
             self.gifts)
@@ -285,6 +314,8 @@ class RegularTaxComputer(TaxComputer):
             0,
             self.agi - max(standard_deduction[self.year], itemized_deduction)
         )
+        if self.year >= 2018:
+            self.taxable_income -= self.qbi
         return self.taxable_income
 
     def get_tax(self):
@@ -309,7 +340,7 @@ class RegularTaxComputer(TaxComputer):
             self.investment_income +
             self.investment_income_modification)
         taxable_investment = (
-            investment_income * (1 - self.state_income_tax / self.agi))
+            investment_income * (1 - self.state_local_income_taxes / self.agi))
         logging.debug("taxable investment: {:.0f}".format(taxable_investment))
         overamount = max(0, self.agi - threshold_on_agi)
         tax = taxrate * min(taxable_investment, overamount)
@@ -339,12 +370,14 @@ class AMTTaxComputer(TaxComputer):
         2017: [
             (0, 0.26),
             (187800, 0.28)],
-        2018: [  # TODO
+        2018: [
             (0, 0.26),
-            (186300, 0.28)],
+            (191500, 0.28)],
     }
 
     QDCG_THRESHOLDS = RegularTaxComputer.QDCG_THRESHOLDS
+
+    UNRECAPTURED_1250_TAX_RATE = RegularTaxComputer.UNRECAPTURED_1250_TAX_RATE
 
     def get_exemption(self):
         exemption_threshold = {
@@ -354,7 +387,7 @@ class AMTTaxComputer(TaxComputer):
             2015: (119200, 53600),
             2016: (119700, 53900),
             2017: (120700, 54300),
-            2018: (119700, 70300),  # TODO
+            2018: (500000, 70300),
         }
 
         if self.exemption is not None:
@@ -455,16 +488,16 @@ class StateTaxComputer(TaxComputer):
             (275738, 0.103),
             (330884, 0.113),
             (551473, 0.123)],
-        2018: [  # TODO
+        2018: [
             (0, 0.01),
-            (8015, 0.02),
-            (19001, 0.04),
-            (29989, 0.06),
-            (41629, 0.08),
-            (52612, 0.093),
-            (268750, 0.103),
-            (322499, 0.113),
-            (537498, 0.123)],
+            (8544, 0.02),
+            (20255, 0.04),
+            (31969, 0.06),
+            (44377, 0.08),
+            (56085, 0.093),
+            (286492, 0.103),
+            (343788, 0.113),
+            (572980, 0.123)],
     }
 
     def get_exemption(self):
@@ -475,7 +508,7 @@ class StateTaxComputer(TaxComputer):
             2015: (178706, 109),
             2016: (182459, 111),
             2017: (187203, 114),
-            2018: (182459, 111),  # TODO
+            2018: (194504, 118),
         }
 
         if self.exemption is not None:
@@ -495,7 +528,7 @@ class StateTaxComputer(TaxComputer):
             2015: 178706,
             2016: 182459,
             2017: 187203,
-            2018: 182459,  # TODO
+            2018: 194504,
         }
         standard_deduction = {
             2012: 3841,
@@ -504,7 +537,7 @@ class StateTaxComputer(TaxComputer):
             2015: 4044,
             2016: 4129,
             2017: 4236,
-            2018: 4129,  # TODO
+            2018: 4401,
         }
 
         if self.taxable_income is not None:
@@ -513,6 +546,7 @@ class StateTaxComputer(TaxComputer):
         state_agi = self.agi - self.state_refund + self.hsa
         tentative_deduction = (
             self.primary_home_property_tax +
+            self.car_registration +
             self.other_taxes +
             self.primary_home_interest +
             self.gifts
@@ -542,6 +576,15 @@ class StateTaxComputer(TaxComputer):
         tax = self._apply_tax_brackets(brackets, taxable_income)
         exemption = self.get_exemption()
         return max(0, tax - exemption)
+
+    def get_mental_health_services_tax(self):
+        threshold = 1000000
+        taxrate = 0.01
+        overamount = max(0, self.get_taxable_income() - threshold)
+        tax = taxrate * overamount
+        logging.debug("applying tax rate {} to {}-{}: {:.0f}".format(
+            taxrate, self.get_taxable_income(), threshold, tax))
+        return tax
 
 
 if __name__ == '__main__':
@@ -602,6 +645,10 @@ if __name__ == '__main__':
         state_tax_computer.get_exemption()))
     logging.info(CYAN + "State Tax: {:.0f}\n".format(
         state_tax_computer.get_tax()) + ENDC)
+    mental_health_services_tax = \
+        state_tax_computer.get_mental_health_services_tax()
+    logging.info(CYAN + "Mental Health Services Tax: {:.0f}".format(
+        mental_health_services_tax) + ENDC)
 
     if args.extrapolate:
         deltas = range(0, 200001, 10000)
