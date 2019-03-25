@@ -21,11 +21,11 @@ class TaxComputer:
                  roth_conversion_gain=0, state_refund=0,
                  capital_gain=0, long_term_capital_gain=0,
                  rental_income=0, qbi = 0, investment_income_modification=0,
-				 other_income=0, hsa=0,
+                 other_income=0, hsa=0,
                  primary_home_property_tax=0, other_taxes=0,
                  primary_home_interest=0, gifts=0, credits = 0,
                  *args, **kwargs):
-
+ 
         self.year = year
         self.w2 = w2
         self.w2_for_medicare = w2_for_medicare
@@ -98,7 +98,7 @@ class TaxComputer:
                 overamount = taxable_income - boundary
                 tax += overamount * taxrate
                 logging.debug(
-                        "applying tax rate {} to {}-{}: {:.0f} cumulative".format(
+                    "applying tax rate {} to {}-{}: {:.0f} cumulative".format(
                         taxrate, taxable_income, boundary, tax))
                 taxable_income -= overamount
         return tax
@@ -112,7 +112,7 @@ class TaxComputer:
             qualified_qdcg = max(0, remaining_qdcg - limit)
             tax += qualified_qdcg * threshold[1]
             logging.debug(
-                    "applying tax rate {} to {}-{}: {:.0f} cumulative".format(
+                "applying tax rate {} to {}-{}: {:.0f} cumulative".format(
                     threshold[1], remaining_qdcg, limit, tax))
             remaining_qdcg -= qualified_qdcg
             if remaining_qdcg == 0:
