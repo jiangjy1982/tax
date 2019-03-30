@@ -339,8 +339,11 @@ class RegularTaxComputer(TaxComputer):
         investment_income = (
             self.investment_income +
             self.investment_income_modification)
-        taxable_investment = (
-            investment_income * (1 - self.state_local_income_taxes / self.agi))
+        allocable_state_local_income_taxes = (
+            self.state_local_income_taxes * (investment_income / self.agi))
+        if self.year >= 2018 and allocable_state_local_income_taxes > 10000:
+            allocable_state_local_income_taxes = 10000
+        taxable_investment = investment_income - allocable_state_local_income_taxes
         logging.debug("taxable investment: {:.0f}".format(taxable_investment))
         overamount = max(0, self.agi - threshold_on_agi)
         tax = taxrate * min(taxable_investment, overamount)
