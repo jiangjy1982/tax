@@ -2,16 +2,20 @@ from collections import namedtuple
 
 
 StateTaxParameters = namedtuple('StateTaxParameters', [
+    'ca_sdi_vpdi_max_wage',
+    'ca_sdi_vpdi_taxrate',
     'brackets',
     'limit_threshold',
     'exemption',
     'standard_deduction',
-    ])
+])
 
 
 state_tax_table = {
 
     2012: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=95585,
+        ca_sdi_vpdi_taxrate=0.01,
         brackets=[
             (0, 0.01),
             (7455, 0.02),
@@ -28,6 +32,8 @@ state_tax_table = {
     ),
 
     2013: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=100880,
+        ca_sdi_vpdi_taxrate=0.01,
         brackets= [
             (0, 0.01),
             (7582, 0.02),
@@ -44,6 +50,8 @@ state_tax_table = {
     ),
 
     2014: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=101636,
+        ca_sdi_vpdi_taxrate=0.01,
         brackets=[
             (0, 0.01),
             (7749, 0.02),
@@ -60,6 +68,8 @@ state_tax_table = {
     ),
 
     2015: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=104378,
+        ca_sdi_vpdi_taxrate=0.009,
         brackets=[
             (0, 0.01),
             (7850, 0.02),
@@ -76,6 +86,8 @@ state_tax_table = {
     ),
 
     2016: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=106742,
+        ca_sdi_vpdi_taxrate=0.009,
         brackets=[
             (0, 0.01),
             (8015, 0.02),
@@ -92,6 +104,8 @@ state_tax_table = {
     ),
 
     2017: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=110902,
+        ca_sdi_vpdi_taxrate=0.009,
         brackets=[
             (0, 0.01),
             (8223, 0.02),
@@ -108,6 +122,8 @@ state_tax_table = {
     ),
 
     2018: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=114967,
+        ca_sdi_vpdi_taxrate=0.01,
         brackets=[
             (0, 0.01),
             (8544, 0.02),
@@ -124,6 +140,8 @@ state_tax_table = {
     ),
 
     2019: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=118371,
+        ca_sdi_vpdi_taxrate=0.01,
         brackets=[
             (0, 0.01),
             (8809, 0.02),

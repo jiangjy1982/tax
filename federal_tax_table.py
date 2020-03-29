@@ -4,17 +4,21 @@ import sys
 
 
 RegularTaxParameters = namedtuple('RegularTaxParameters', [
+    'social_security_max_wage',
+    'social_security_taxrate',
     'brackets',
     'qdcg_thresholds',
     'limit_threshold',
     'exemption',
     'standard_deduction',
-    ])
+])
 
 
 regular_tax_table = {
 
     2012: RegularTaxParameters(
+        social_security_max_wage=110100,
+        social_security_taxrate=0.052,
         brackets=[
             (0, 0.1),
             (8700, 0.15),
@@ -31,6 +35,8 @@ regular_tax_table = {
     ),
 
     2013: RegularTaxParameters(
+        social_security_max_wage=113700,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (8925, 0.15),
@@ -49,6 +55,8 @@ regular_tax_table = {
     ),
 
     2014: RegularTaxParameters(
+        social_security_max_wage=117000,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (9075, 0.15),
@@ -67,6 +75,8 @@ regular_tax_table = {
     ),
 
     2015: RegularTaxParameters(
+        social_security_max_wage=118500,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (9225, 0.15),
@@ -85,6 +95,8 @@ regular_tax_table = {
     ),
 
     2016: RegularTaxParameters(
+        social_security_max_wage=118500,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (9275, 0.15),
@@ -103,6 +115,8 @@ regular_tax_table = {
     ),
 
     2017: RegularTaxParameters(
+        social_security_max_wage=127200,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (9325, 0.15),
@@ -121,6 +135,8 @@ regular_tax_table = {
     ),
 
     2018: RegularTaxParameters(
+        social_security_max_wage=128400,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (9525, 0.12),
@@ -139,6 +155,8 @@ regular_tax_table = {
     ),
 
     2019: RegularTaxParameters(
+        social_security_max_wage=132900,
+        social_security_taxrate=0.062,
         brackets=[
             (0, 0.1),
             (9700, 0.12),
@@ -163,7 +181,7 @@ AMTTaxParameters = namedtuple('AMTTaxParameters', [
     'qdcg_thresholds',
     'limit_threshold',
     'exemption',
-    ])
+])
 
 
 amt_tax_table = {
