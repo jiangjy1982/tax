@@ -53,7 +53,7 @@ fields_real_estate = (
     'insurance',
     'advertising',
     'legal',
-    'commissions',
+    'commission',
     'management',
     'repairs',
     'utilities',
