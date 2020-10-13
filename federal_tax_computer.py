@@ -1,5 +1,3 @@
-from functools import cached_property
-
 import logging
 import math
 
@@ -11,7 +9,7 @@ class FederalTaxComputer(TaxComputer):
 
     UNRECAPTURED_1250_TAXRATE = 0.25
 
-    @cached_property
+    @property
     def state_local_income_taxes(self):
         return (
             self.state_income_tax_withheld
@@ -20,7 +18,7 @@ class FederalTaxComputer(TaxComputer):
             + self.state_estimated_tax_paid_last_year)
 
 
-    @cached_property
+    @property
     def credits(self):
         if self.year < 2018:
             return self.foreign_tax_paid
@@ -65,26 +63,26 @@ class FederalTaxComputer(TaxComputer):
         return tax
 
 
-    @cached_property
+    @property
     def tax(self):
         return self.compute_tax_with_qdcg(max(0, self.taxable_income - self.exemption))
 
 
 class RegularTaxComputer(FederalTaxComputer):
 
-    @cached_property
+    @property
     def params(self):
         return regular_tax_table[self.year]
 
 
-    @cached_property
+    @property
     def exemption(self):
         excess = max(0, self.agi - self.params.limit_threshold)
         logging.debug(f"excess = {excess}")
         return self.params.exemption * (1 - min(1, math.ceil(excess / 2500) * 0.02))
 
 
-    @cached_property
+    @property
     def state_local_taxes(self):
         state_local_taxes = (
             self.state_local_income_taxes
@@ -96,7 +94,7 @@ class RegularTaxComputer(FederalTaxComputer):
         return state_local_taxes
 
 
-    @cached_property
+    @property
     def qualified_business_income(self):
         qbi = 0
         if self.year >= 2018:
@@ -105,7 +103,7 @@ class RegularTaxComputer(FederalTaxComputer):
         return qbi
 
 
-    @cached_property
+    @property
     def itemized_deduction(self):
         tentative_deduction = (
             self.state_local_taxes
@@ -132,7 +130,7 @@ class RegularTaxComputer(FederalTaxComputer):
         return tentative_deduction - limit
 
 
-    @cached_property
+    @property
     def taxable_income(self):
          return max(
             0,
@@ -141,7 +139,7 @@ class RegularTaxComputer(FederalTaxComputer):
             - self.qualified_business_income)
 
 
-    @cached_property
+    @property
     def additional_medicare_tax(self):
         threshold_on_w2 = 200000
         taxrate = 0.009
@@ -151,7 +149,7 @@ class RegularTaxComputer(FederalTaxComputer):
         return tax
 
 
-    @cached_property
+    @property
     def net_investment_income_tax(self):
         threshold_on_agi = 200000
         taxrate = 0.038
@@ -184,7 +182,7 @@ class RegularTaxComputer(FederalTaxComputer):
         return tax
 
 
-    @cached_property
+    @property
     def excess_social_security(self):
         return max(0,
             self.social_security_tax_withheld
@@ -193,7 +191,7 @@ class RegularTaxComputer(FederalTaxComputer):
                 self.social_security_wages))
 
 
-    @cached_property
+    @property
     def tax_withheld(self):
         medicare_taxrate = 0.0145
         medicare_tax = self.medicare_wages * medicare_taxrate
@@ -207,19 +205,19 @@ class RegularTaxComputer(FederalTaxComputer):
 
 class AMTTaxComputer(FederalTaxComputer):
 
-    @cached_property
+    @property
     def params(self):
         return amt_tax_table[self.year]
 
 
-    @cached_property
+    @property
     def exemption(self):
         excess = max(0, self.taxable_income - self.params.limit_threshold)
         logging.debug(f"excess = {excess}")
         return max(0, self.params.exemption - excess * 0.25)
 
 
-    @cached_property
+    @property
     def itemized_deduction(self):
         itemized_deduction = (
             self.primary_home_interests
@@ -232,7 +230,7 @@ class AMTTaxComputer(FederalTaxComputer):
         return itemized_deduction
 
 
-    @cached_property
+    @property
     def taxable_income(self):
         return max(
             0,
