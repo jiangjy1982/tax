@@ -77,14 +77,15 @@ if __name__ == '__main__':
 
     if args.extrapolate:
         deltas = range(0, 200001, 10000)
-        long_term_capital_gain = rtc.long_term_capital_gain
         regular_taxes = []
         amt_taxes = []
         for delta in deltas:
-            rtc.long_term_capital_gain = long_term_capital_gain + delta
-            regular_taxes.append(rtc.tax)
-            atc.long_term_capital_gain = long_term_capital_gain + delta
-            amt_taxes.append(atc.tax)
+            rtc2 = RegularTaxComputer(**params)
+            rtc2.long_term_capital_gain = rtc.long_term_capital_gain + delta
+            regular_taxes.append(rtc2.tax)
+            atc2 = AMTTaxComputer(**params)
+            atc2.long_term_capital_gain = rtc.long_term_capital_gain + delta
+            amt_taxes.append(atc2.tax)
 
         fig, ax = plt.subplots()
         ax.plot(deltas, regular_taxes, 'bo-', label='Regular Tax')
