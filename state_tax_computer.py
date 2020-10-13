@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import logging
 import math
 
@@ -7,7 +9,7 @@ from state_tax_table import state_tax_table
 
 class StateTaxComputer(TaxComputer):
 
-    @property
+    @cached_property
     def ca_adjusted_agi(self):
         return (
             self.agi
@@ -15,19 +17,19 @@ class StateTaxComputer(TaxComputer):
             + self.hsa)
 
 
-    @property
+    @cached_property
     def params(self):
         return state_tax_table[self.year]
 
 
-    @property
+    @cached_property
     def exemption(self):
         excess = max(0, self.agi - self.params.limit_threshold)
         logging.debug(f"excess = {excess:.0f}")
         return max(0, self.params.exemption - math.ceil(excess / 2500) * 6)
 
 
-    @property
+    @cached_property
     def itemized_deduction(self):
         tentative_deduction = (
             self.primary_home_taxes +
@@ -50,7 +52,7 @@ class StateTaxComputer(TaxComputer):
         return tentative_deduction - limit
 
 
-    @property
+    @cached_property
     def taxable_income(self):
         return max(
             0,
@@ -59,13 +61,13 @@ class StateTaxComputer(TaxComputer):
         )
 
 
-    @property
+    @cached_property
     def tax(self):
         tax = self.apply_tax_brackets(self.params.brackets, self.taxable_income)
         return max(0, tax - self.exemption)
 
 
-    @property
+    @cached_property
     def mental_health_services_tax(self):
         threshold = 1000000
         taxrate = 0.01
@@ -75,7 +77,7 @@ class StateTaxComputer(TaxComputer):
         return tax
 
 
-    @property
+    @cached_property
     def excess_sdi_vpdi(self):
         return max(0,
             self.ca_sdi + self.ca_vpdi
@@ -84,7 +86,7 @@ class StateTaxComputer(TaxComputer):
                 self.state_wages))
 
 
-    @property
+    @cached_property
     def tax_withheld(self):
         return (
             self.state_income_tax_withheld
