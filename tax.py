@@ -17,7 +17,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging.basicConfig(
-        level=logging.INFO if not args.extrapolate else logging.INFO,
+        level=logging.DEBUG if not args.extrapolate else logging.INFO,
         format='%(funcName)s [%(lineno)d]: %(message)s')
 
     numbers = importlib.import_module(args.file)
@@ -77,25 +77,19 @@ if __name__ == '__main__':
 
     if args.extrapolate:
         deltas = range(0, 200001, 10000)
-        item = 'capital_gain'
-        regular_taxes = [RegularTaxComputer(
-            **dict(params, **{
-                item: params[item] + delta,
-                'long_term_capital_gain':
-                    params['long_term_capital_gain'] + delta,
-            })).tax for delta in deltas]
-        amt_taxes = [AMTTaxComputer(
-            **dict(params, **{
-                item: params[item] + delta,
-                'long_term_capital_gain':
-                    params['long_term_capital_gain'] + delta,
-            })).tax for delta in deltas]
+        long_term_capital_gain = rtc.long_term_capital_gain
+        regular_taxes = []
+        amt_taxes = []
+        for delta in deltas:
+            rtc.long_term_capital_gain = long_term_capital_gain + delta
+            regular_taxes.append(rtc.tax)
+            atc.long_term_capital_gain = long_term_capital_gain + delta
+            amt_taxes.append(atc.tax)
 
         fig, ax = plt.subplots()
         ax.plot(deltas, regular_taxes, 'bo-', label='Regular Tax')
         ax.plot(deltas, amt_taxes, 'rs--', label='AMT Tax')
-        actual_tax = max(
-            rtc.get_tax(), atc.get_tax())
+        actual_tax = max(rtc.tax, atc.tax)
         ax.plot(0, actual_tax,
                 'y*', markersize=20, label='Actual Tax')
         legend = ax.legend(loc='upper center', shadow=True)

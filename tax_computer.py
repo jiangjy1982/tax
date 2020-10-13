@@ -79,16 +79,24 @@ class TaxComputer(ABC):
         self.state_estimated_tax_paid_this_year = state_estimated_tax_paid_this_year
         self.penalty = penalty
 
-        self.capital_gain = max(
+
+    @property
+    def capital_gain(self):
+        return max(
             self.CAPITAL_LOSS_LIMIT,
-            self.short_term_capital_gain
-            + self.long_term_capital_gain
-            - self.capital_loss_carryover)
-        self.rental_income_offset = max(
+            self.short_term_capital_gain + self.long_term_capital_gain - self.capital_loss_carryover)
+
+
+    @property
+    def rental_income_offset(self):
+        return max(
             0,
-            self.rental_income
-            - self.rental_loss_carryover)
-        self.agi = (
+            self.rental_income - self.rental_loss_carryover)
+
+
+    @property
+    def agi(self):
+        return (
             self.w2
             + self.interests
             + self.dividends
