@@ -156,4 +156,22 @@ state_tax_table = {
         exemption=122,
         standard_deduction=4537,
     ),
+
+    2020: StateTaxParameters(
+        ca_sdi_vpdi_max_wage=122909,
+        ca_sdi_vpdi_taxrate=0.01,
+        brackets=[
+            (0, 0.01),
+            (8932, 0.02),
+            (21175, 0.04),
+            (33421, 0.06),
+            (46394, 0.08),
+            (58634, 0.093),
+            (299508, 0.103),
+            (359407, 0.113),
+            (599012, 0.123)],
+        limit_threshold=203341,
+        exemption=124,
+        standard_deduction=4601,
+    ),
 }

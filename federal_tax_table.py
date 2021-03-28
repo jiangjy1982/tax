@@ -173,6 +173,26 @@ regular_tax_table = {
         exemption=0,
         standard_deduction=12200,
     ),
+
+    2020: RegularTaxParameters(
+        social_security_max_wage=137700,
+        social_security_taxrate=0.062,
+        brackets=[
+            (0, 0.1),
+            (9875, 0.12),
+            (40125, 0.22),
+            (85525, 0.24),
+            (163300, 0.32),
+            (207350, 0.35),
+            (518400, 0.37)],
+        qdcg_thresholds=[
+            (40000, 0),
+            (441450, 0.15),
+            (sys.maxsize, 0.2)],
+        limit_threshold=sys.maxsize,
+        exemption=0,
+        standard_deduction=12400,
+    ),
 }
 
 
@@ -256,5 +276,14 @@ amt_tax_table = {
         qdcg_thresholds=regular_tax_table[2019].qdcg_thresholds,
         limit_threshold=510300,
         exemption=71700,
+    ),
+
+    2020: AMTTaxParameters(
+        brackets=[
+            (0, 0.26),
+            (197900, 0.28)],
+        qdcg_thresholds=regular_tax_table[2019].qdcg_thresholds,
+        limit_threshold=518400,
+        exemption=72900,
     ),
 }

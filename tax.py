@@ -39,6 +39,8 @@ if __name__ == '__main__':
     logging.info(f"    Qualified dividends: {rtc.qualified_dividends:.0f}")
     logging.info(f"IRA distributions: {rtc.roth_conversion_gain:.0f}")
     logging.info(f"Capital gain: {rtc.capital_gain:.0f}")
+    logging.info(f"    Short-term capital gain: {rtc.short_term_capital_gain:.0f}")
+    logging.info(f"    Long-term capital gain: {rtc.long_term_capital_gain:.0f}")
     other_income = (rtc.taxable_state_refund + rtc.rental_income_offset + rtc.misc_income)
     logging.info(f"Other income: {other_income:.0f}")
     logging.info(f"    Taxable state refunds: {rtc.taxable_state_refund:.0f}")

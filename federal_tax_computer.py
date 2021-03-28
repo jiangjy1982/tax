@@ -100,7 +100,7 @@ class RegularTaxComputer(FederalTaxComputer):
     def qualified_business_income(self):
         qbi = 0
         if self.year >= 2018:
-            qbi = (self.rental_income + self.section_199A_dividends) * 0.2
+            qbi = 0.2 * (max(self.rental_income, 0) + self.section_199A_dividends)
         logging.debug(f"qbi = {qbi:.0f}")
         return qbi
 
