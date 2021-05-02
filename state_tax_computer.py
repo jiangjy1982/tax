@@ -90,6 +90,7 @@ class StateTaxComputer(TaxComputer):
     def tax_withheld(self):
         return (
             self.state_income_tax_withheld
+            + self.state_593
             + self.excess_sdi_vpdi
-            + self.state_estimated_tax_paid_last_year
-            + self.state_estimated_tax_paid_this_year)
+            + self.state_estimated_tax_paid_in_last_year_for_current_return
+            + self.state_estimated_tax_paid_in_this_year_for_current_return)

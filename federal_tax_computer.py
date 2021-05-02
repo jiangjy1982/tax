@@ -15,9 +15,11 @@ class FederalTaxComputer(TaxComputer):
     def state_local_income_taxes(self):
         return (
             self.state_income_tax_withheld
+            + self.state_593
             + self.ca_sdi
             + self.state_tax_due_last_year
-            + self.state_estimated_tax_paid_last_year)
+            + self.state_estimated_tax_paid_in_last_year_for_previous_return
+            + self.state_estimated_tax_paid_in_last_year_for_current_return)
 
 
     @cached_property
@@ -160,12 +162,14 @@ class RegularTaxComputer(FederalTaxComputer):
             self.interests
             + self.dividends
             + self.rental_income_offset
+            + self.k1_income
             + self.capital_gain
             + self.investment_income_modification)
         logging.debug(f"investment_income: {investment_income:.0f}")
         logging.debug(f"    interests: {self.interests:.0f}")
         logging.debug(f"    dividends: {self.dividends:.0f}")
         logging.debug(f"    rental_income: {self.rental_income_offset:.0f}")
+        logging.debug(f"    k1_income: {self.k1_income:.0f}")
         logging.debug(f"    capital_gain: {self.capital_gain:.0f}")
         logging.debug(f"    investment_income_modification: {self.investment_income_modification:.0f}")
 

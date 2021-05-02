@@ -13,16 +13,19 @@ class TaxComputer(ABC):
             form_w2s,
             form_1099s,
             real_estates,
+            form_k1s=None,
             capital_loss_carryover=0,
             rental_loss_carryover=0,
+            state_tax_adjustments_for_previous_return=0,
+            state_estimated_tax_paid_in_last_year_for_previous_return=0,
             investment_income_modification=0,
-            state_tax_adjustments_last_year=0,
             car_registration=0,
             other_taxes=0,
             gifts=0,
+            state_593=0,
             federal_estimated_tax_paid=0,
-            state_estimated_tax_paid_last_year=0,
-            state_estimated_tax_paid_this_year=0,
+            state_estimated_tax_paid_in_last_year_for_current_return=0,
+            state_estimated_tax_paid_in_this_year_for_current_return=0,
             penalty=0,
             *args, **kwargs):
 
@@ -62,21 +65,28 @@ class TaxComputer(ABC):
         rentals = [r for r in real_estates if not r.is_primary]
         self.rental_incomes = [(
             r.id,
-            r.rents - sum(getattr(r, a) for a in r._fields if a not in ('id', 'is_primary', 'rents')))
+            r.rents - sum(getattr(r, a) for a in (
+                 'taxes', 'interests', 'hoa', 'insurance', 'advertising', 'legal', 'commission', 'management', 'repairs', 'utilities', 'depreciation', 'other')))
             for r in rentals]
         self.rental_income = sum([ri[1] for ri in self.rental_incomes])
 
+        self.k1_income = 0
+        if form_k1s is not None:
+            self.k1_income = sum([k.income for k in form_k1s])
+
         self.capital_loss_carryover = capital_loss_carryover
         self.rental_loss_carryover = rental_loss_carryover
+        self.taxable_state_refund = max(0, -state_tax_adjustments_for_previous_return)
+        self.state_tax_due_last_year = max(0, state_tax_adjustments_for_previous_return)
+        self.state_estimated_tax_paid_in_last_year_for_previous_return = state_estimated_tax_paid_in_last_year_for_previous_return
         self.investment_income_modification = investment_income_modification
-        self.taxable_state_refund = max(0, -state_tax_adjustments_last_year)
-        self.state_tax_due_last_year = max(0, state_tax_adjustments_last_year)
         self.car_registration = car_registration
         self.other_taxes = other_taxes
         self.gifts = gifts
+        self.state_593 = state_593
         self.federal_estimated_tax_paid = federal_estimated_tax_paid
-        self.state_estimated_tax_paid_last_year = state_estimated_tax_paid_last_year
-        self.state_estimated_tax_paid_this_year = state_estimated_tax_paid_this_year
+        self.state_estimated_tax_paid_in_last_year_for_current_return = state_estimated_tax_paid_in_last_year_for_current_return
+        self.state_estimated_tax_paid_in_this_year_for_current_return = state_estimated_tax_paid_in_this_year_for_current_return
         self.penalty = penalty
 
 
@@ -103,6 +113,7 @@ class TaxComputer(ABC):
             + self.capital_gain
             + self.misc_income
             + self.rental_income_offset
+            + self.k1_income
             + self.taxable_state_refund
             + self.roth_conversion_gain)
 

@@ -64,3 +64,14 @@ RealEstate = namedtuple(
     'RealEstate',
     fields_real_estate,
     defaults=('', False) + (0,) * len(fields_real_estate[2:]))
+
+
+fields_k1 = (
+    'id',
+    'income',
+)
+FormK1 = namedtuple(
+    'FormK1',
+    fields_k1,
+    defaults=('', 0)
+)
